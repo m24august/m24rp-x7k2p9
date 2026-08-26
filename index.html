@@ -2851,7 +2851,75 @@ var CKEYS=['plan2','plReason','statusTag','statusDate','statusDateStr','paid','p
 var RESET_KEYS=['plan2','plReason','statusTag','statusDate','statusDateStr','paid','pa','pl','pd','pdate','pc','pn','opp','pst','p2date','payBehavior','urgeR','closeType','closeAmt','closeDate','closeDay','preOverride','mNoPay'];
 function custTouched(x){return !!(x.plan2||x.plReason||x.statusTag||x.paid||x.p2date||x.meEval||x.escAction||(x.pd>0)||(x.pc===1)||x.mNoPay||x.urgeLock||x.preOverride||x.cleared||x.payTs||(x.log&&x.log.length));}
 function _urgeSnap(code){var n=0,sz=0,paid=0,ret=0,pre=0,income=0,bT1=0,bT2=0,bonus=0;CUST.forEach(function(x){if(x.amType!=='2'||x.s!==code||x.agent==='6808003')return;n++;var uc=(typeof urgeClass==='function')?urgeClass(x):'';if(uc==='seize'){sz++;income+=500;}else if(uc==='paid'){paid++;income+=250;var a=(_paidSum(x)||x.pl||x.f||0);if(a>=5500){bT2++;bonus+=450;}else if(a>=3500){bT1++;bonus+=250;}}else if(uc==='return'){ret++;}else if(uc==='pre'){pre++;}});return{n:n,sz:sz,paid:paid,ret:ret,pre:pre,done:sz+paid+ret+pre,income:income,bT1:bT1,bT2:bT2,bonus:bonus};}
-function branchState(b){var cs=[];CUST.forEach(function(x){if(x.s!==b.code)return;if(!custTouched(x))return;var o={id:x.id,cno:x.cno||''};CKEYS.forEach(function(k){if(x[k]!==undefined&&x[k]!==null){if(k==='log'&&(!x[k]||!x[k].length))return;o[k]=x[k];}});cs.push(o);});return {plan:b.plan,act:{sale:(b.act&&b.act.sale)||0,salePawn:(b.act&&b.act.salePawn)||0},cust:cs,snap:{good:b.good,total:b.total,mid:b.mid,lt:b.lt,goodPct:b.goodPct,planPct:(typeof planPct==='function')?planPct(b):0,monthEndPct:(typeof monthEndPct==='function')?monthEndPct(b):0,urge:(typeof _urgeSnap==='function')?_urgeSnap(b.code):null,am:(typeof amAgg==='function')?amAgg([b.code]):null,ts:TODAY_LABEL}};}
+function _dailyReport(code){
+  try{
+    var b=(typeof DATA!=='undefined')?DATA.find(function(d){return d.code===code;}):null;
+    if(!b) return '';
+    var bn=b.name||('สาขา '+code);
+
+    // วันที่วันนี้ (เลขวันของเดือน) — ใช้จับ "เก็บได้วันนี้" และ "ถึงดิว/ครบกำหนดวันนี้"
+    var _now=new Date();
+    var td=_now.getDate();
+    var _dlabel=(typeof TODAY_LABEL!=='undefined'&&TODAY_LABEL)?TODAY_LABEL:('ประจำวันที่ '+td);
+
+    // ── ส่วนสาขาเก็บเอง (amType 1): เป้าเดือน / ทำได้เดือน / เก็บได้วันนี้ ──
+    var s=dailyT1(b);                        // {n:เป้าเดือน, cum:ทำได้เดือน, days[], adv, duo, part}
+    var monTgt=s.n||0, monDone=s.cum||0;
+    var monPct=monTgt?(monDone/monTgt*100):0;
+    var doneToday=(s.days&&s.days[td-1])?s.days[td-1]:0;
+
+    // ── ถึงดิว(ยังไม่เก็บ) / ครบกำหนดวันนี้ (amType 1) ──
+    var dueReached=0, dueToday=0;
+    // ── ผ่อนควบ (ทั้งสาขา) + แจกแจงเกรดงวดค้าง 0-6 + ผ่อนควบวันนี้ ──
+    var duoGrade=[0,0,0,0,0,0,0], duoTot=0, duoToday=0;
+    CUST.forEach(function(x){
+      if(x.s!==code) return;
+      if(x.amType==='1'){
+        var dd=dueDay(x);
+        if(dd>0){
+          if(dd<=td && !isCollected(x)) dueReached++;
+          if(dd===td) dueToday++;
+        }
+      }
+      if(isCollected(x)&&paidDuo(x)){
+        var gb=x.b; if(gb>=0&&gb<=6){ duoGrade[gb]++; duoTot++; if(x.pd===td) duoToday++; }
+      }
+    });
+    var missed=Math.max(0, dueReached - doneToday);
+
+    // ── งานเร่งรัด (amType 2) ──
+    var u=urgeBrStat(code);                  // {n, done, sz(ยึด), paid(จ่าย), ret, pre}
+    var uPct=u.n?(u.done/u.n*100):0;
+
+    // ── ประกอบข้อความ ──
+    var L=[];
+    L.push('🏢 '+bn);
+    L.push('📅 '+_dlabel);
+    L.push('━━━━━━━━━━━━━');
+    L.push('🎯 เป้าเก็บเอง (วันนี้)');
+    L.push('▸ ถึงดิว '+dueReached+' ราย · เก็บได้ '+doneToday+' ราย');
+    L.push('▸ ตกเป้า '+missed+' ราย');
+    L.push('▸ สะสมทั้งเดือน '+monTgt+'/'+monDone+' = '+monPct.toFixed(2)+'%');
+    L.push('');
+    L.push('📆 ดิวถัดไป');
+    L.push('▸ ครบกำหนดวันนี้ → '+dueToday+' ราย');
+    L.push('▸ คงค้างรอเก็บรวม → '+dueReached+' ราย');
+    L.push('');
+    L.push('🚦 งานเร่งรัด');
+    L.push('▸ ผลงาน '+u.done+'/'+u.n+' = '+uPct.toFixed(2)+'%');
+    L.push('▸ 🏍️ ยึดรถ '+u.sz+' คัน · 💵 เข้าจ่าย '+u.paid+' ราย');
+    L.push('');
+    L.push('🔁 ผ่อนควบ');
+    L.push('▸ วันนี้ → '+duoToday+' ราย · รวมงวดค้าง 0-6 → '+duoTot+' ราย');
+    L.push('   เกรด0='+duoGrade[0]+'  เกรด1='+duoGrade[1]+'  เกรด2='+duoGrade[2]+'  เกรด3='+duoGrade[3]);
+    L.push('   เกรด4='+duoGrade[4]+'  เกรด5='+duoGrade[5]+'  เกรด6='+duoGrade[6]);
+    L.push('━━━━━━━━━━━━━');
+    L.push('— โมโต24 · ระบบติดตามหนี้ —');
+    return L.join('\n');
+  }catch(e){ return ''; }
+}
+
+function branchState(b){var cs=[];CUST.forEach(function(x){if(x.s!==b.code)return;if(!custTouched(x))return;var o={id:x.id,cno:x.cno||''};CKEYS.forEach(function(k){if(x[k]!==undefined&&x[k]!==null){if(k==='log'&&(!x[k]||!x[k].length))return;o[k]=x[k];}});cs.push(o);});return {plan:b.plan,act:{sale:(b.act&&b.act.sale)||0,salePawn:(b.act&&b.act.salePawn)||0},cust:cs,snap:{daily:_dailyReport(b.code),good:b.good,total:b.total,mid:b.mid,lt:b.lt,goodPct:b.goodPct,planPct:(typeof planPct==='function')?planPct(b):0,monthEndPct:(typeof monthEndPct==='function')?monthEndPct(b):0,urge:(typeof _urgeSnap==='function')?_urgeSnap(b.code):null,am:(typeof amAgg==='function')?amAgg([b.code]):null,ts:TODAY_LABEL}};}
 function applyBranchState(b,st){if(!st)return;if(st.plan){for(var pk in st.plan){b.plan[pk]=st.plan[pk];}}if(st.act){b.act=b.act||{};b.act.sale=st.act.sale||0;b.act.salePawn=st.act.salePawn||0;}if(st.cust&&st.cust.length){var mapId={},mapCno={};st.cust.forEach(function(c){mapId[c.id]=c;if(c.cno)mapCno[c.cno]=c;});CUST.forEach(function(x){if(x.s!==b.code)return;var c=(x.cno&&mapCno[x.cno])||mapId[x.id];if(!c)return;CKEYS.forEach(function(k){if(c[k]===undefined)return;if(k==='paid'&&x[k]===true&&!c[k])return;if(k==='pc')return;if(k==='log'&&x[k]&&x[k].length&&c[k]&&c[k].length<x[k].length)return;x[k]=c[k];});if((c.payTs||0)>(x.payTs||0)){x.payTs=c.payTs;if(c.payCleared&&!_paidExpSet()[String(x.cno)]){['paid','pa','pl','pd','pdate','pc','pn','opp','pst','p2date','payBehavior'].forEach(function(_k){delete x[_k];});x.payCleared=1;}else{x.payCleared=0;}}if(c.cleared){RESET_KEYS.forEach(function(k){if(c[k]!==undefined)x[k]=c[k];else delete x[k];});if(c.log!==undefined)x.log=c.log;x.cleared=1;}});}if(st.snap){var _hc=CUST.some(function(x){return x.s===b.code;});if(!_hc){if(st.snap.good!==undefined)b.good=st.snap.good;if(st.snap.mid!==undefined)b.mid=st.snap.mid;if(st.snap.lt!==undefined)b.lt=st.snap.lt;if(st.snap.total!==undefined)b.total=st.snap.total;if(st.snap.goodPct!==undefined)b.goodPct=st.snap.goodPct;}}rebuildDays(b);computeAct(b);computeCmp(b);syncPlanFromCust(b);}
 function syncBadgeHTML(){var m={off:['ออฟไลน์ (เดโม)','#9aa0c4'],loading:['กำลังโหลด...','#fbbf24'],saving:['กำลังบันทึก...','#fbbf24'],saved:['☁ โหลดแล้ว '+CUST.length.toLocaleString()+' ราย','#86efac'],error:['เชื่อมต่อไม่ได้','#fca5a5']};var x=m[SYNC.status]||m.off;return '<span id="syncBadge" onclick="syncConfig()" title="ตั้งค่าการเชื่อมต่อข้อมูล" style="cursor:pointer;font-size:12px;color:'+x[1]+';background:rgba(255,255,255,.12);padding:7px 12px;border-radius:8px;white-space:nowrap">'+x[0]+(SYNC.url?(' · '+SYNC.period):'')+' ⚙</span>';}
 function syncRenderBadge(){var w=document.getElementById('syncWrap');if(w)w.innerHTML=syncBadgeHTML();}
