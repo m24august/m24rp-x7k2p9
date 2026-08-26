@@ -136,7 +136,7 @@ input,select,textarea{min-height:40px;font-size:14px!important}
 <div class="top"><div class="in">
 <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
 <div class="brandmark"><div class="wm">โมโต<span>24</span></div><div class="co"><span class="ln"></span><span class="nm">บริษัท โมโต24 จำกัด</span><span class="ln"></span></div></div>
-<div><h1>ระบบบริหารติดตามหนี้ · 37 สาขา</h1><div class="sub">หน้าหลัก → บันทึกผลงาน → ติดตาม &amp; ปิดจบ → จัดการงานหมดโอกาส → รายงาน <span style="opacity:.65;font-size:.85em;margin-left:4px">· รุ่น ส.ค.-A76📊รายงานวัน2🔒 ✓</span></div></div>
+<div><h1>ระบบบริหารติดตามหนี้ · 37 สาขา</h1><div class="sub">หน้าหลัก → บันทึกผลงาน → ติดตาม &amp; ปิดจบ → จัดการงานหมดโอกาส → รายงาน <span style="opacity:.65;font-size:.85em;margin-left:4px">· รุ่น ส.ค.-A77📊ถึงดิวแก้🔒 ✓</span></div></div>
 </div>
 <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span id="bellWrap"></span><button class="btn" onclick="openGlobalSearch()" style="font-size:13px;padding:9px 16px">+ บันทึกรับชำระ</button><div class="roles"><span style="font-size:12px;color:#b9bcec;margin-right:6px">มุมมอง:</span><select id="roleSel"></select></div></div>
 </div><div class="navrow"><div class="navin" id="navtabs"></div></div></div>
@@ -2877,7 +2877,7 @@ function _dailyReport(code){
       if(x.amType==='1'){
         var dd=dueDay(x);
         if(dd>0){
-          if(dd<=td && !isCollected(x)) dueReached++;
+          if(dd<=td && !(dailyCounted(x)&&x.pd!==td)) dueReached++;
           if(dd===td) dueToday++;
         }
       }
@@ -2905,7 +2905,7 @@ function _dailyReport(code){
     L.push('━━━━━━━━━━━━━');
     L.push('📆 ดิวถัดไป');
     L.push('▸ ครบกำหนดวันนี้ '+dueToday+' ราย');
-    L.push('▸ คงค้างรอเก็บรวม '+dueReached+' ราย');
+    L.push('▸ คงค้างรอเก็บรวม '+missed+' ราย');
     L.push('━━━━━━━━━━━━━');
     L.push('🚦 งานเร่งรัด');
     L.push('▸ ผลงาน '+u.done+'/'+u.n+' = '+uPct.toFixed(2)+'%');
