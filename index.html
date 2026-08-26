@@ -136,7 +136,7 @@ input,select,textarea{min-height:40px;font-size:14px!important}
 <div class="top"><div class="in">
 <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
 <div class="brandmark"><div class="wm">โมโต<span>24</span></div><div class="co"><span class="ln"></span><span class="nm">บริษัท โมโต24 จำกัด</span><span class="ln"></span></div></div>
-<div><h1>ระบบบริหารติดตามหนี้ · 37 สาขา</h1><div class="sub">หน้าหลัก → บันทึกผลงาน → ติดตาม &amp; ปิดจบ → จัดการงานหมดโอกาส → รายงาน <span style="opacity:.65;font-size:.85em;margin-left:4px">· รุ่น ส.ค.-A73เงินสด🔒 ✓</span></div></div>
+<div><h1>ระบบบริหารติดตามหนี้ · 37 สาขา</h1><div class="sub">หน้าหลัก → บันทึกผลงาน → ติดตาม &amp; ปิดจบ → จัดการงานหมดโอกาส → รายงาน <span style="opacity:.65;font-size:.85em;margin-left:4px">· รุ่น ส.ค.-A75📊ดันทุกสาขา🔒 ✓</span></div></div>
 </div>
 <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span id="bellWrap"></span><button class="btn" onclick="openGlobalSearch()" style="font-size:13px;padding:9px 16px">+ บันทึกรับชำระ</button><div class="roles"><span style="font-size:12px;color:#b9bcec;margin-right:6px">มุมมอง:</span><select id="roleSel"></select></div></div>
 </div><div class="navrow"><div class="navin" id="navtabs"></div></div></div>
@@ -2999,6 +2999,22 @@ function syncLoad(cb){
   }).catch(function(e){SYNC.on=false;syncSetStatus('error');if(cb)cb(false);});
 }
 function _paidCount(code){var n=0;CUST.forEach(function(x){if(x.s===code&&paidLike(x))n++;});return n;}
+function pushAllDaily(){
+  if(!(typeof SYNC!=='undefined'&&SYNC&&SYNC.url)){alert('ยังไม่ได้เชื่อมต่อฐานข้อมูลกลาง — เชื่อมต่อก่อนครับ');return;}
+  if(typeof role!=='undefined'&&role!=='gm'){ if(!confirm('แนะนำให้รันด้วยสิทธิ์ส่วนกลาง (GM) เพื่อครบทุกสาขา\nดำเนินการต่อเฉพาะสาขาที่โหลดอยู่?')) return; }
+  var list=DATA.slice(),i=0,ok=0,fail=0;
+  if(typeof toast==='function')toast('⏫ กำลังอัปเดตรายงานประจำวันทุกสาขา…');
+  (function next(){
+    if(i>=list.length){ alert('✅ ดันรายงานประจำวันขึ้นชีตแล้ว '+ok+'/'+list.length+' สาขา (พลาด '+fail+')\nพิมพ์รหัสสาขาในไลน์เพื่อดูรายงานใหม่ได้เลย'); return; }
+    var b=list[i++];
+    var body=JSON.stringify({action:'save',period:SYNC.period,branch:b.code,data:branchState(b)});
+    fetch(SYNC.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:body})
+      .then(function(r){return r.json();}).then(function(j){ if(j&&j.ok)ok++; else fail++; })
+      .catch(function(){ fail++; })
+      .finally(function(){ setTimeout(next,180); });
+  })();
+}
+
 function syncSaveBranch(code){if(!SYNC.url)return;var b=DATA.find(function(d){return d.code===code;});if(!b)return;var _cur=_paidCount(code);var _k='moto3_hwm_'+code;var _hwm=0;try{_hwm=+(localStorage.getItem(_k)||0);}catch(e){}if(_hwm-_cur>=5&&_cur<_hwm*0.8){if(typeof confirm==='function'&&!confirm('⚠️ ยอด "ทำได้" ของสาขา '+(b.name||code)+' กำลังลดจาก '+_hwm+' เหลือ '+_cur+' ราย — อาจเป็นการเขียนทับข้อมูลจากอีกเครื่อง · กด "ตกลง" = บันทึกทับ · "ยกเลิก" = ดึงข้อมูลล่าสุดกลับ')){delete SYNC.dirty[code];if(typeof syncLoad==='function')syncLoad(function(ok){if(ok&&typeof renderAll==='function')renderAll();});return;}try{localStorage.setItem(_k,String(_cur));}catch(e){}}else{try{localStorage.setItem(_k,String(Math.max(_hwm,_cur)));}catch(e){}}var body=JSON.stringify({action:'save',period:SYNC.period,branch:code,data:branchState(b)});fetch(SYNC.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:body}).then(function(r){return r.json();}).then(function(j){if(j&&j.ok){delete SYNC.dirty[code];syncSetStatus('saved');}else{_syncFail(code);}}).catch(function(){_syncFail(code);});}
 function localLoadDirty(){try{Object.keys(SYNC.dirty||{}).forEach(function(code){var b=DATA.find(function(d){return d.code===code;});if(!b)return;var s=localStorage.getItem('moto3_br_'+code);if(s){try{applyBranchState(b,JSON.parse(s));}catch(e){}}});}catch(e){}}
 function touchSave(code){if(!code)return;SYNC._lastEdit=Date.now();localSave(code);if(!SYNC.url)return;SYNC.dirty[code]=true;syncSetStatus('saving');if(SYNC._t)clearTimeout(SYNC._t);SYNC._t=setTimeout(flushSave,1500);}
