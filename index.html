@@ -136,7 +136,7 @@ input,select,textarea{min-height:40px;font-size:14px!important}
 <div class="top"><div class="in">
 <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
 <div class="brandmark"><div class="wm">โมโต<span>24</span></div><div class="co"><span class="ln"></span><span class="nm">บริษัท โมโต24 จำกัด</span><span class="ln"></span></div></div>
-<div><h1>ระบบบริหารติดตามหนี้ · 37 สาขา</h1><div class="sub">หน้าหลัก → บันทึกผลงาน → ติดตาม &amp; ปิดจบ → จัดการงานหมดโอกาส → รายงาน <span style="opacity:.65;font-size:.85em;margin-left:4px">· รุ่น ส.ค.-A75📊ดันทุกสาขา🔒 ✓</span></div></div>
+<div><h1>ระบบบริหารติดตามหนี้ · 37 สาขา</h1><div class="sub">หน้าหลัก → บันทึกผลงาน → ติดตาม &amp; ปิดจบ → จัดการงานหมดโอกาส → รายงาน <span style="opacity:.65;font-size:.85em;margin-left:4px">· รุ่น ส.ค.-A76📊รายงานวัน2🔒 ✓</span></div></div>
 </div>
 <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span id="bellWrap"></span><button class="btn" onclick="openGlobalSearch()" style="font-size:13px;padding:9px 16px">+ บันทึกรับชำระ</button><div class="roles"><span style="font-size:12px;color:#b9bcec;margin-right:6px">มุมมอง:</span><select id="roleSel"></select></div></div>
 </div><div class="navrow"><div class="navin" id="navtabs"></div></div></div>
@@ -2892,27 +2892,30 @@ function _dailyReport(code){
     var uPct=u.n?(u.done/u.n*100):0;
 
     // ── ประกอบข้อความ ──
+        var bnf=String(bn).replace('-',' · ');
     var L=[];
-    L.push('🏢 '+bn);
+    L.push('📊 สรุปผลงานติดตามหนี้');
+    L.push('🏢 '+bnf);
     L.push('📅 '+_dlabel);
     L.push('━━━━━━━━━━━━━');
     L.push('🎯 เป้าเก็บเอง (วันนี้)');
-    L.push('▸ ถึงดิว '+dueReached+' ราย · เก็บได้ '+doneToday+' ราย');
+    L.push('▸ ถึงดิว '+dueReached+' · เก็บได้ '+doneToday+' ราย');
     L.push('▸ ตกเป้า '+missed+' ราย');
     L.push('▸ สะสมทั้งเดือน '+monTgt+'/'+monDone+' = '+monPct.toFixed(2)+'%');
-    L.push('');
+    L.push('━━━━━━━━━━━━━');
     L.push('📆 ดิวถัดไป');
-    L.push('▸ ครบกำหนดวันนี้ → '+dueToday+' ราย');
-    L.push('▸ คงค้างรอเก็บรวม → '+dueReached+' ราย');
-    L.push('');
+    L.push('▸ ครบกำหนดวันนี้ '+dueToday+' ราย');
+    L.push('▸ คงค้างรอเก็บรวม '+dueReached+' ราย');
+    L.push('━━━━━━━━━━━━━');
     L.push('🚦 งานเร่งรัด');
     L.push('▸ ผลงาน '+u.done+'/'+u.n+' = '+uPct.toFixed(2)+'%');
-    L.push('▸ 🏍️ ยึดรถ '+u.sz+' คัน · 💵 เข้าจ่าย '+u.paid+' ราย');
-    L.push('');
+    L.push('▸ 🏍️ ยึดรถ '+u.sz+' คัน');
+    L.push('▸ 💵 เข้าจ่าย '+u.paid+' ราย');
+    L.push('━━━━━━━━━━━━━');
     L.push('🔁 ผ่อนควบ');
-    L.push('▸ วันนี้ → '+duoToday+' ราย · รวมงวดค้าง 0-6 → '+duoTot+' ราย');
-    L.push('   เกรด0='+duoGrade[0]+'  เกรด1='+duoGrade[1]+'  เกรด2='+duoGrade[2]+'  เกรด3='+duoGrade[3]);
-    L.push('   เกรด4='+duoGrade[4]+'  เกรด5='+duoGrade[5]+'  เกรด6='+duoGrade[6]);
+    L.push('▸ ทำได้วันนี้ '+duoToday+' ราย');
+    L.push('▸ รวม (งวด 0-6) '+duoTot+' ราย');
+    for(var _gi=0;_gi<=6;_gi++){ L.push('   เกรด '+_gi+' = '+duoGrade[_gi]+' ราย'); }
     L.push('━━━━━━━━━━━━━');
     L.push('— โมโต24 · ระบบติดตามหนี้ —');
     return L.join('\n');
