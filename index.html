@@ -136,7 +136,7 @@ input,select,textarea{min-height:40px;font-size:14px!important}
 <div class="top"><div class="in">
 <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
 <div class="brandmark"><div class="wm">โมโต<span>24</span></div><div class="co"><span class="ln"></span><span class="nm">บริษัท โมโต24 จำกัด</span><span class="ln"></span></div></div>
-<div><h1>ระบบบริหารติดตามหนี้ · 37 สาขา</h1><div class="sub">หน้าหลัก → บันทึกผลงาน → ติดตาม &amp; ปิดจบ → จัดการงานหมดโอกาส → รายงาน <span style="opacity:.65;font-size:.85em;margin-left:4px">· รุ่น ส.ค.-A79📊เปิดสิทธิ์รายงาน🔒 ✓</span></div></div>
+<div><h1>ระบบบริหารติดตามหนี้ · 37 สาขา</h1><div class="sub">หน้าหลัก → บันทึกผลงาน → ติดตาม &amp; ปิดจบ → จัดการงานหมดโอกาส → รายงาน <span style="opacity:.65;font-size:.85em;margin-left:4px">· รุ่น ส.ค.-A80📊เปิดสิทธิ์รายงาน2🔒 ✓</span></div></div>
 </div>
 <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span id="bellWrap"></span><button class="btn" onclick="openGlobalSearch()" style="font-size:13px;padding:9px 16px">+ บันทึกรับชำระ</button><div class="roles"><span style="font-size:12px;color:#b9bcec;margin-right:6px">มุมมอง:</span><select id="roleSel"></select></div></div>
 </div><div class="navrow"><div class="navin" id="navtabs"></div></div></div>
@@ -1918,7 +1918,7 @@ function _rpExcel(){if(typeof XLSX==='undefined'){toast&&toast('ต้องอ�
 
 function openDailyReport(){if(role!=='gm'){window._savedRole=role;role='gm';reportScope='all';dailyMode='pace';}if(!reportScope||!scopeValid(reportScope))reportScope=defaultScope();if(role==='branch')dailyMode='vint';
  _detailCode=null;_listSpec=null;_apptOpen=false;document.getElementById('custOv').style.display='block';document.getElementById('custTitle').textContent='รายงานประจำวัน · ส่งลงไลน์';
- var modeBtns=(role==='branch')?'':'<div style="display:flex;gap:7px;margin-bottom:11px;justify-content:center;flex-wrap:wrap">'+[['pace','ผลงานสาขา'],['urge','ผลงานเร่งรัด'],['bkt','ผลงานภาพรวม'],['fair','เทียบดิว·ยุติธรรม'],['vint','ผลงานเก็บหนี้ 12 งวดแรก']].map(function(m){var on=dailyMode===m[0];return '<button class="btn'+(on?'':' gh')+'" style="padding:5px 14px;font-size:12.5px" onclick="setDailyMode(\''+m[0]+'\')">'+m[1]+'</button>';}).join('')+'</div>';
+ var modeBtns=(role==='branch')?'':'<div style="display:flex;gap:7px;margin-bottom:11px;justify-content:center;flex-wrap:wrap">'+[['pace','ผลงานสาขา'],['urge','ผลงานเร่งรัด'],['bkt','ผลงานภาพรวม'],['fair','เทียบดิว·ยุติธรรม'],['vint','ผลงานเก็บหนี้ 12 งวดแรก']].filter(function(_m){return window._savedRole?(_m[0]==='pace'||_m[0]==='vint'):true;}).map(function(m){var on=dailyMode===m[0];return '<button class="btn'+(on?'':' gh')+'" style="padding:5px 14px;font-size:12.5px" onclick="setDailyMode(\''+m[0]+'\')">'+m[1]+'</button>';}).join('')+'</div>';
  var content;var subBtns='';
  if(dailyMode==='bkt'){content=bktCardHTML();}
  else if(dailyMode==='urge'){content=urgeCardHTML();}
