@@ -136,7 +136,7 @@ input,select,textarea{min-height:40px;font-size:14px!important}
 <div class="top"><div class="in">
 <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
 <div class="brandmark"><div class="wm">โมโต<span>24</span></div><div class="co"><span class="ln"></span><span class="nm">บริษัท โมโต24 จำกัด</span><span class="ln"></span></div></div>
-<div><h1>ระบบบริหารติดตามหนี้ · 37 สาขา</h1><div class="sub">หน้าหลัก → บันทึกผลงาน → ติดตาม &amp; ปิดจบ → จัดการงานหมดโอกาส → รายงาน <span style="opacity:.65;font-size:.85em;margin-left:4px">· รุ่น ส.ค.-A84📊กันทับv84🔒 ✓</span></div></div>
+<div><h1>ระบบบริหารติดตามหนี้ · 37 สาขา</h1><div class="sub">หน้าหลัก → บันทึกผลงาน → ติดตาม &amp; ปิดจบ → จัดการงานหมดโอกาส → รายงาน <span style="opacity:.65;font-size:.85em;margin-left:4px">· รุ่น ส.ค.-A85📊กันทับv85🔒 ✓</span></div></div>
 </div>
 <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span id="bellWrap"></span><button class="btn" onclick="openGlobalSearch()" style="font-size:13px;padding:9px 16px">+ บันทึกรับชำระ</button><div class="roles"><span style="font-size:12px;color:#b9bcec;margin-right:6px">มุมมอง:</span><select id="roleSel"></select></div></div>
 </div><div class="navrow"><div class="navin" id="navtabs"></div></div></div>
@@ -2924,7 +2924,54 @@ function _dailyReport(code){
   }catch(e){ return ''; }
 }
 
-function branchState(b){var cs=[];CUST.forEach(function(x){if(x.s!==b.code)return;if(!custTouched(x))return;var o={id:x.id,cno:x.cno||''};CKEYS.forEach(function(k){if(x[k]!==undefined&&x[k]!==null){if(k==='log'&&(!x[k]||!x[k].length))return;o[k]=x[k];}});cs.push(o);});return {plan:b.plan,act:{sale:(b.act&&b.act.sale)||0,salePawn:(b.act&&b.act.salePawn)||0},cust:cs,snap:{daily:_dailyReport(b.code),dver:84,good:b.good,total:b.total,mid:b.mid,lt:b.lt,goodPct:b.goodPct,planPct:(typeof planPct==='function')?planPct(b):0,monthEndPct:(typeof monthEndPct==='function')?monthEndPct(b):0,urge:(typeof _urgeSnap==='function')?_urgeSnap(b.code):null,am:(typeof amAgg==='function')?amAgg([b.code]):null,ts:TODAY_LABEL}};}
+function _eodReport(code){
+  try{
+    var b=(typeof DATA!=='undefined')?DATA.find(function(d){return d.code===code;}):null;
+    if(!b) return '';
+    var bn=(b.name||('สาขา '+code)).replace(/^(\d+)\s*-\s*/,'$1 · ');
+    var _now=new Date();
+    var _M=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    var td=_now.getDate();
+    var _dstr=td+' '+_M[_now.getMonth()]+' '+(_now.getFullYear()+543);
+    function _pt(d,t){ if(!t) return '0%'; var v=Math.floor((d/t*100)*100)/100; if(v===Math.floor(v)) return Math.floor(v)+'%'; return v.toFixed(2)+'%'; }
+    function _pair(d,t){ return t+'/'+d+' = '+_pt(d,t); }
+    var s=dailyT1(b);
+    var monTgt=s.n||0, monDone=s.cum||0, monPct=_pt(monDone,monTgt);
+    var doneToday=(s.days&&s.days[td-1])?s.days[td-1]:0;
+    var dueReached=0;
+    CUST.forEach(function(x){ if(x.s!==code) return; if(x.amType==='1'){ var dd=dueDay(x); if(dd>0 && dd<=td && !(dailyCounted(x)&&x.pd!==td)) dueReached++; } });
+    var missed=Math.max(0, dueReached-doneToday);
+    function _sec(agg,st){ var a=agg([code],st), L=[], T=0,D=0; for(var i=7;i<=12;i++){ var d=(a[i]?a[i][0]:0), t=(a[i]?a[i][1]:0); D+=d; T+=t; L.push(i+' งวด '+_pair(d,t)); } L.push('รวมลูกหนี้ '+_pair(D,T)); return L; }
+    var u=urgeBrStat(code), uPct=u.n?(u.done/u.n*100):0;
+    var BR='━━━━━━━━━━━━━', o=[];
+    o.push('📋 สรุปผลงานติดตามหนี้');
+    o.push('🏢 '+bn);
+    o.push('📅 '+_dstr);
+    o.push(BR);
+    o.push('🎯 เป้าเก็บเอง (วันนี้)');
+    o.push('▸ ถึงดิว '+dueReached+' · เก็บได้ '+doneToday+' ราย');
+    o.push('▸ ตกเป้า '+missed+' ราย');
+    o.push('▸ สะสมทั้งเดือน '+monTgt+'/'+monDone+' = '+monPct);
+    o.push(BR);
+    o.push('🏍️ ผลงานเก็บหนี้ขายรถ (KPI)'); o=o.concat(_sec(vintAgg,'hp'));
+    o.push(BR);
+    o.push('💍 ผลงานเก็บหนี้จำนำ (KPI)'); o=o.concat(_sec(vintAgg,'pw'));
+    o.push(BR);
+    o.push('🏍️ ผลงานเก็บหนี้ขายรถ (ตรงดิว)'); o=o.concat(_sec(cohAgg,'hp'));
+    o.push(BR);
+    o.push('💍 ผลงานเก็บหนี้จำนำ (ตรงดิว)'); o=o.concat(_sec(cohAgg,'pw'));
+    o.push(BR);
+    o.push('🚦 งานเร่งรัด · '+u.done+'/'+u.n+' = '+uPct.toFixed(2)+'%');
+    o.push('▸ 🏍️ ยึดรถ '+u.sz+' คัน');
+    o.push('▸ 💵 จ่ายตามนัด '+u.paid+' ราย');
+    o.push('▸ 🙋 จ่ายก่อนตาม '+u.pre+' ราย');
+    o.push('▸ ↩️ คืนรถ '+u.ret+' คัน');
+    o.push(BR);
+    o.push('🏢 โมโต24 · รายงานปิดวัน');
+    return o.join('\n');
+  }catch(e){ return ''; }
+}
+function branchState(b){var cs=[];CUST.forEach(function(x){if(x.s!==b.code)return;if(!custTouched(x))return;var o={id:x.id,cno:x.cno||''};CKEYS.forEach(function(k){if(x[k]!==undefined&&x[k]!==null){if(k==='log'&&(!x[k]||!x[k].length))return;o[k]=x[k];}});cs.push(o);});return {plan:b.plan,act:{sale:(b.act&&b.act.sale)||0,salePawn:(b.act&&b.act.salePawn)||0},cust:cs,snap:{daily:_dailyReport(b.code),eod:_eodReport(b.code),dver:85,good:b.good,total:b.total,mid:b.mid,lt:b.lt,goodPct:b.goodPct,planPct:(typeof planPct==='function')?planPct(b):0,monthEndPct:(typeof monthEndPct==='function')?monthEndPct(b):0,urge:(typeof _urgeSnap==='function')?_urgeSnap(b.code):null,am:(typeof amAgg==='function')?amAgg([b.code]):null,ts:TODAY_LABEL}};}
 function applyBranchState(b,st){if(!st)return;if(st.plan){for(var pk in st.plan){b.plan[pk]=st.plan[pk];}}if(st.act){b.act=b.act||{};b.act.sale=st.act.sale||0;b.act.salePawn=st.act.salePawn||0;}if(st.cust&&st.cust.length){var mapId={},mapCno={};st.cust.forEach(function(c){mapId[c.id]=c;if(c.cno)mapCno[c.cno]=c;});CUST.forEach(function(x){if(x.s!==b.code)return;var c=(x.cno&&mapCno[x.cno])||mapId[x.id];if(!c)return;CKEYS.forEach(function(k){if(c[k]===undefined)return;if(k==='paid'&&x[k]===true&&!c[k])return;if(k==='pc')return;if(k==='log'&&x[k]&&x[k].length&&c[k]&&c[k].length<x[k].length)return;x[k]=c[k];});if((c.payTs||0)>(x.payTs||0)){x.payTs=c.payTs;if(c.payCleared&&!_paidExpSet()[String(x.cno)]){['paid','pa','pl','pd','pdate','pc','pn','opp','pst','p2date','payBehavior'].forEach(function(_k){delete x[_k];});x.payCleared=1;}else{x.payCleared=0;}}if(c.cleared){RESET_KEYS.forEach(function(k){if(c[k]!==undefined)x[k]=c[k];else delete x[k];});if(c.log!==undefined)x.log=c.log;x.cleared=1;}});}if(st.snap){var _hc=CUST.some(function(x){return x.s===b.code;});if(!_hc){if(st.snap.good!==undefined)b.good=st.snap.good;if(st.snap.mid!==undefined)b.mid=st.snap.mid;if(st.snap.lt!==undefined)b.lt=st.snap.lt;if(st.snap.total!==undefined)b.total=st.snap.total;if(st.snap.goodPct!==undefined)b.goodPct=st.snap.goodPct;}}rebuildDays(b);computeAct(b);computeCmp(b);syncPlanFromCust(b);}
 function syncBadgeHTML(){var m={off:['ออฟไลน์ (เดโม)','#9aa0c4'],loading:['กำลังโหลด...','#fbbf24'],saving:['กำลังบันทึก...','#fbbf24'],saved:['☁ โหลดแล้ว '+CUST.length.toLocaleString()+' ราย','#86efac'],error:['เชื่อมต่อไม่ได้','#fca5a5']};var x=m[SYNC.status]||m.off;return '<span id="syncBadge" onclick="syncConfig()" title="ตั้งค่าการเชื่อมต่อข้อมูล" style="cursor:pointer;font-size:12px;color:'+x[1]+';background:rgba(255,255,255,.12);padding:7px 12px;border-radius:8px;white-space:nowrap">'+x[0]+(SYNC.url?(' · '+SYNC.period):'')+' ⚙</span>';}
 function syncRenderBadge(){var w=document.getElementById('syncWrap');if(w)w.innerHTML=syncBadgeHTML();}
