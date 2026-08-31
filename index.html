@@ -444,7 +444,7 @@ function escColor(k){for(var i=0;i<ESCDEST.length;i++)if(ESCDEST[i][0]===k)retur
 var ESCSTAT=[['todo','รอเริ่ม','#5f6480','#eef0f5'],['doing','กำลังทำ','#15803d','#dcfce7'],['stuck','ยังไม่คืบ','#c0392b','#fee2e2'],['done','สำเร็จ','#185fa5','#e6f1fb']];
 function escStatLabel(k){for(var i=0;i<ESCSTAT.length;i++)if(ESCSTAT[i][0]===k)return ESCSTAT[i][1];return 'รอเริ่ม';}
 function escStatSet(id,v){CUST[id].escStatus=v||'todo';if(typeof touchSave==='function')touchSave(CUST[id].s);renderStep();}
-function uncoll02(codes){return CUST.filter(function(x){return x.amType==='1'&&codes.indexOf(x.s)>=0&&!isCollected(x)&&!(x.statusTag&&(REMOVE_SET[x.statusTag]||x.statusTag==='ปิดบัญชี'));});}
+function isDone02(x){return (x.pa>0&&x.pd>=1&&x.pd<=NDAYS&&!paidPartial(x))||(x.pc===1&&x.pd<1&&(x.pa>0||x.pn>=1)&&!paidPartial(x));}function uncoll02(codes){return CUST.filter(function(x){return x.amType==='1'&&codes.indexOf(x.s)>=0&&!isDone02(x)&&!(x.statusTag&&(REMOVE_SET[x.statusTag]||x.statusTag==='ปิดบัญชี'));});}
 function meLost(codes){return uncoll02(codes).filter(function(x){return x.meEval==='lost';});}
 function uncoll36(codes){return CUST.filter(function(x){return x.amType==='2'&&codes.indexOf(x.s)>=0&&!paidLike(x)&&!(x.statusTag&&(REMOVE_SET[x.statusTag]||x.statusTag==='ปิดบัญชี'));});}
 function meLost36(codes){return uncoll36(codes).filter(function(x){return x.meEval==='lost';});}
