@@ -3209,7 +3209,7 @@ setupLogin();
   try{
     syncCfgLoad();
     SYNC.period='2569-08';try{if(typeof syncCfgSave==='function')syncCfgSave();}catch(e){}
-    try{var _npp=String((typeof SYNC!=='undefined'&&SYNC.period)||'').split('-');var _npm=parseInt(_npp[1])||0,_npy=parseInt(_npp[0])||0;if(_npy>2500)_npy-=543;if(_npm&&_npy){var _ndim=new Date(_npy,_npm,0).getDate();var _curm=(_npm===_MM&&_npy===_YYYY);NDAYS=_curm?Math.max(TODAY_DAY,9):_ndim;DAYS_TOTAL=_ndim;DAY_NOW=_curm?TODAY_DAY:_ndim;}}catch(e){}
+    try{var _npp=String((typeof SYNC!=='undefined'&&SYNC.period)||'').split('-');var _npm=parseInt(_npp[1])||0,_npy=parseInt(_npp[0])||0;if(_npy>2500)_npy-=543;if(_npm&&_npy){var _ndim=new Date(_npy,_npm,0).getDate();var _curm=(_npm===_MM&&_npy===_YYYY);NDAYS=_curm?Math.max(TODAY_DAY,9):_ndim;DAYS_TOTAL=_ndim;DAY_NOW=_curm?TODAY_DAY:_ndim;if(!_curm){TODAY_DAY=_ndim;TODAY_STR=_z2(_ndim)+'/'+_z2(_npm)+'/'+_npy;TODAY_ISO=_npy+'-'+_z2(_npm)+'-'+_z2(_ndim);TODAY_LABEL=_ndim+' '+_THMON[_npm]+' '+(_npy+543);}}}catch(e){}
     if(typeof _EMBED_CUST_JSON==='undefined')window._EMBED_CUST_JSON=JSON.stringify(CUST);
     CUST.length=0;
     if(typeof BAHT!=='undefined'){for(var _bk in BAHT)delete BAHT[_bk];}
