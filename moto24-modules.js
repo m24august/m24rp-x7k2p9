@@ -294,7 +294,7 @@
   pill.addEventListener('click',toggle);try{pop.querySelector('.x').addEventListener('click',toggle);}catch(e){}
   function cacheGet(code){try{var raw=localStorage.getItem('moto3_wx_'+code);if(!raw)return null;var o=JSON.parse(raw);var d=new Date();var today=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);if(o.day===today&&(Date.now()-o.ts<10800000))return o.data;}catch(e){}return null;}
   function cacheSet(code,data){try{var d=new Date();var today=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);localStorage.setItem('moto3_wx_'+code,JSON.stringify({day:today,ts:Date.now(),data:data}));}catch(e){}}
-  function load(code){var ll=_BRLL[code];if(!ll){pill.style.display='none';return;}try{document.getElementById('wxPillBr').textContent=brName(code);}catch(e){}var c=cacheGet(code);if(c){render(c,code);return;}try{document.getElementById('wxBody').innerHTML='<div class="wx-load">กำลังโหลดข้อมูลอากาศ…</div>';}catch(e){}fetch(url(ll)).then(function(r){return r.json();}).then(function(j){if(j&&j.daily){cacheSet(code,j);render(j,code);}else throw 0;}).catch(function(){try{document.getElementById('wxBody').innerHTML='<div class="wx-load">โหลดอากาศไม่สำเร็จ — เช็คเน็ตแล้วลองใหม่</div>';}catch(e){}});}
+  function load(code){window._wxCur=code;var ll=_BRLL[code];if(!ll){pill.style.display='none';return;}try{document.getElementById('wxPillBr').textContent=brName(code);}catch(e){}var c=cacheGet(code);if(c){render(c,code);return;}try{document.getElementById('wxBody').innerHTML='<div class="wx-load">กำลังโหลดข้อมูลอากาศ…</div>';}catch(e){}fetch(url(ll)).then(function(r){return r.json();}).then(function(j){if(j&&j.daily){cacheSet(code,j);render(j,code);}else throw 0;}).catch(function(){try{document.getElementById('wxBody').innerHTML='<div class="wx-load">โหลดอากาศไม่สำเร็จ — เช็คเน็ตแล้วลองใหม่</div>';}catch(e){}});}
   function render(data,code){try{
     var d=data.daily,h=data.hourly,today=d.time[0];
     var per=[['เช้า',6,11],['สาย',11,13],['บ่าย',13,17],['เย็น',17,20]].map(function(x){var a=periodAgg(h,today,x[1],x[2]);a.name=x[0];return a;});
@@ -319,4 +319,5 @@
   var tries=0;
   function boot(){tries++;var ok=false;try{var lo=document.getElementById('loginOv');ok=(typeof role!=='undefined')&&(typeof _BRLL!=='undefined')&&(!lo||lo.style.display==='none'||getComputedStyle(lo).display==='none');}catch(e){}if(!ok){if(tries<150)setTimeout(boot,2000);return;}var code=defCode();if(!code){if(tries<150)setTimeout(boot,2000);return;}load(code);}
   boot();
+  setInterval(function(){try{if(window._wxCur&&!document.hidden)load(window._wxCur);}catch(e){}},600000);
 })();
